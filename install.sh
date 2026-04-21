@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Office Skills Pro installer
-# Copies the 11 office-automation skills into ~/.claude/skills/
-# and verifies required system dependencies.
+# Office Skills Pro 安装器
+# 把 12 个办公自动化 skill 拷到 ~/.claude/skills/
+# 并校验系统依赖
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 
-echo "==> Installing Office Skills Pro to $TARGET"
+echo "==> 安装 Office Skills Pro 到 $TARGET"
 mkdir -p "$TARGET"
 
 SKILLS=(docx-pro xlsx-pro pptx-pro pdf-pro doc-coauthor email-pro meeting-analyzer contract-pro data-cleaner report-builder form-automator office-orchestrator)
@@ -18,57 +18,57 @@ for skill in "${SKILLS[@]}"; do
     src="$SCRIPT_DIR/skills/$skill"
     dst="$TARGET/$skill"
     if [[ ! -d "$src" ]]; then
-        echo "   SKIP  $skill (source missing)"
+        echo "   跳过  $skill（源文件缺失）"
         continue
     fi
     if [[ -e "$dst" ]]; then
-        echo "   REPLACE  $skill"
+        echo "   替换  $skill"
         rm -rf "$dst"
     else
-        echo "   ADD      $skill"
+        echo "   新增  $skill"
     fi
     cp -r "$src" "$dst"
     installed=$((installed + 1))
 done
-echo "==> Installed $installed skills"
+echo "==> 装了 $installed 个 skill"
 
 echo ""
-echo "==> Checking Python dependencies"
+echo "==> 检查 Python 依赖"
 missing_py=()
 for pkg in docx openpyxl pandas pptx pypdf pdfplumber fitz reportlab PIL docxtpl jinja2; do
     python3 -c "import $pkg" 2>/dev/null || missing_py+=("$pkg")
 done
 if (( ${#missing_py[@]} > 0 )); then
-    echo "   Missing Python packages: ${missing_py[*]}"
-    echo "   Install with:"
+    echo "   缺失的 Python 包：${missing_py[*]}"
+    echo "   用这条命令装："
     echo "     pip install python-docx docxtpl openpyxl xlsxwriter pandas \\"
     echo "       python-pptx 'markitdown[pptx,docx,xlsx]' \\"
     echo "       pypdf pdfplumber pymupdf reportlab pdfminer.six ocrmypdf img2pdf \\"
     echo "       python-dateutil chardet rapidfuzz jinja2 regex webvtt-py srt Pillow"
 else
-    echo "   All Python packages present"
+    echo "   Python 包全在"
 fi
 
 echo ""
-echo "==> Checking system tools"
+echo "==> 检查系统工具"
 for bin in soffice pandoc pdftoppm pdftotext tesseract; do
     if command -v "$bin" >/dev/null 2>&1; then
-        echo "   FOUND   $bin"
+        echo "   有     $bin"
     else
-        echo "   MISSING $bin"
+        echo "   缺     $bin"
     fi
 done
 
 cat <<'EOF'
 
-==> Done.
+==> 搞定。
 
-Quick start — any of these will invoke a skill automatically:
-  • "Build me a Q4 financial model in Excel"              → xlsx-pro
-  • "Turn this transcript into coaching feedback"          → meeting-analyzer
-  • "Draft an NDA for a freelancer in Germany"             → contract-pro
-  • "Clean this CSV and email each customer their invoice" → office-orchestrator
-                                                              (data-cleaner → form-automator → email-pro)
+快速上手 —— 这些话随便说一句都会自动触发对应的 skill：
+  • "给我做一份 Q4 财务模型 Excel"              → xlsx-pro
+  • "把这份会议转录做成辅导反馈"                 → meeting-analyzer
+  • "给一位德国的自由职业者起草 NDA"             → contract-pro
+  • "清洗这份 CSV · 然后给每个客户发对应的发票" → office-orchestrator
+                                                       （data-cleaner → form-automator → email-pro）
 
-Full docs: https://github.com/huangji6693-max/office-skills-pro
+完整文档：https://github.com/huangji6693-max/office-skills-pro
 EOF

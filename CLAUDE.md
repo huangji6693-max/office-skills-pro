@@ -1,91 +1,91 @@
-# CLAUDE.md — Office Skills Pro
+# CLAUDE.md · Office Skills Pro
 
-This file configures how Claude Code uses the office-skills-pro library. Do not modify unless you know what you're changing — it shapes skill routing behavior.
+这份文件配置龙虾（Claude Code）怎么用 office-skills-pro 这套库 —— 改之前先看懂 · 它决定 skill 路由的行为。
 
-## Skill Routing
+## Skill 路由
 
-When the user's request matches one of the skill descriptions, invoke the matching skill automatically. Description-based matching is already handled by Claude Code's skill runtime; this file just documents the decision rules.
+主人的请求匹配到某个 skill 的 description 时 · 龙虾自动调那个 skill。描述匹配由 Claude Code 的 skill runtime 完成 · 这里只是把决策规则写清楚。
 
-### Format-first triggers
+### 按格式触发
 
-| Signal in user request | Skill to invoke |
-|-----------------------|-----------------|
-| `.docx`, "Word doc", "Word document", "memo", "letter" | `docx-pro` |
-| `.xlsx`, `.csv`, "spreadsheet", "Excel", "financial model" | `xlsx-pro` |
-| `.pptx`, "deck", "slides", "presentation", "pitch" | `pptx-pro` |
-| `.pdf`, "PDF", "OCR", "fill this form" (PDF form) | `pdf-pro` |
+| 请求里出现 | 触发的 skill |
+|-----------|------------|
+| `.docx` / "Word 文档" / "公文" / "信函" / "备忘录" | `docx-pro` |
+| `.xlsx` / `.csv` / "表格" / "Excel" / "财务模型" | `xlsx-pro` |
+| `.pptx` / "PPT" / "幻灯片" / "演示文稿" / "路演" | `pptx-pro` |
+| `.pdf` / "PDF" / "OCR" / "填 PDF 表单" | `pdf-pro` |
 
-### Workflow triggers
+### 按工作流触发
 
-| Signal | Skill |
-|--------|-------|
-| "Write a PRD / RFC / decision doc / spec" | `doc-coauthor` |
-| "Draft an email", "cold outreach", "email sequence" | `email-pro` |
-| "Analyze my meeting", "transcript", "how did I come across" | `meeting-analyzer` |
-| "Contract", "NDA", "SOW", "proposal", "MSA" | `contract-pro` |
-| "Clean this data", "messy CSV", "fix the spreadsheet" | `data-cleaner` |
-| "Weekly report", "monthly report", "board deck from numbers" | `report-builder` |
-| "Mail merge", "bulk-fill", "generate N documents from this list" | `form-automator` |
-| Multi-format pipeline ("data → deck → PDF → email") | `office-orchestrator` |
+| 信号 | Skill |
+|------|-------|
+| "写 PRD / RFC / 决策文档 / 技术规范" | `doc-coauthor` |
+| "起草邮件" / "冷启动外联" / "邮件序列" | `email-pro` |
+| "分析会议" / "转录" / "我表现怎样" | `meeting-analyzer` |
+| "合同" / "NDA" / "SOW" / "提案" / "MSA" | `contract-pro` |
+| "清洗这份数据" / "乱 CSV" / "修这张表" | `data-cleaner` |
+| "周报" / "月报" / "从数字做董事会汇报" | `report-builder` |
+| "邮件合并" / "批量填" / "根据这份列表生成 N 份文档" | `form-automator` |
+| 多格式流水线（数据 → PPT → PDF → 邮件）| `office-orchestrator` |
 
-### Disambiguation rules
+### 消歧规则
 
-1. **Single format request** → use the format-specific skill directly. Don't invoke `office-orchestrator` for a one-step task.
-2. **Multi-format pipeline** → invoke `office-orchestrator`, which then delegates.
-3. **Content creation + specific format** → invoke the workflow skill (e.g., `doc-coauthor`) first, then the format skill (`docx-pro`) for the final render.
-4. **Data analysis + presentation** → `report-builder` owns the narrative; it calls `xlsx-pro` / `pptx-pro` as needed.
+1. **单格式请求** → 直接用对应的格式 skill · 别用 `office-orchestrator` 做单步任务
+2. **多格式流水线** → 调 `office-orchestrator` · 它再分发
+3. **内容创作 + 特定格式** → 先调工作流 skill（比如 `doc-coauthor`）· 最后渲染用格式 skill（`docx-pro`）
+4. **数据分析 + 演示** → `report-builder` 拿叙事主导权 · 按需调 `xlsx-pro` / `pptx-pro`
 
-## Quality Bars Every Skill Enforces
+## 所有 Skill 都要守的质量线
 
-These apply to every deliverable this library produces:
+这套库产出的每一份交付物都遵守：
 
-1. **Verify before claiming done** — every skill has an explicit checklist; do not declare success until it's passed
-2. **No hardcoded calculations in spreadsheets** — formulas always (per `xlsx-pro` standards)
-3. **No accent-line-under-title, no pie charts > 5 slices, no emoji decoration** — decks and reports follow anti-slop discipline
-4. **Evidence-based output** — meeting analyzer cites timestamps; data cleaner emits a changelog; reports explain not just numbers but "what / so what / now what"
-5. **Mail merge dry run** — always test on 3-5 records and show the user before batch-processing
-6. **Don't swallow errors** — emit `errors.csv` / changelog / warnings alongside success
-7. **Match existing templates** — when editing a file with established formatting, never impose "best practices" over it
+1. **验证才说完成** —— 每个 skill 都有明确 checklist · 没过 checklist 不许说 done
+2. **不准在表格里写死数字** —— 永远用公式（按 `xlsx-pro` 的标准）
+3. **PPT 不要"标题下横线" · 不要超过 5 片的饼图 · 不要 emoji 装饰** —— 所有 PPT 和报告走反 slop 纪律
+4. **基于证据** —— 会议分析引用时间戳 · 数据清洗输出 changelog · 报告不仅说数字还说 "what / so what / now what"
+5. **邮件合并先 dry run** —— 永远先测 3-5 条给主人看 · 批准后才批量
+6. **不准吞错误** —— 输出成功的同时一定带 `errors.csv` / changelog / warnings
+7. **匹配既有模板** —— 改一个已经有既定样式的文件时 · 不许强加所谓"最佳实践"覆盖原样式
 
-## Dependencies
+## 依赖
 
-Core Python stack (all open source):
-- `python-docx` / `docxtpl` — Word
-- `openpyxl` / `xlsxwriter` / `pandas` — Excel
-- `python-pptx` — PowerPoint
-- `pypdf` / `pdfplumber` / `pymupdf` / `reportlab` — PDF
-- `jinja2` / `python-dateutil` / `chardet` / `rapidfuzz` — helpers
+核心 Python 栈（全开源）：
+- `python-docx` / `docxtpl` —— Word
+- `openpyxl` / `xlsxwriter` / `pandas` —— Excel
+- `python-pptx` —— PowerPoint
+- `pypdf` / `pdfplumber` / `pymupdf` / `reportlab` —— PDF
+- `jinja2` / `python-dateutil` / `chardet` / `rapidfuzz` —— 工具
 
-System tools:
-- `libreoffice` (soffice) — cross-format conversion, Excel formula recalculation
-- `pandoc` — docx ↔ md ↔ html
-- `poppler-utils` (pdftoppm, pdftotext) — PDF inspection
-- `tesseract-ocr` — OCR for scanned PDFs
+系统工具：
+- `libreoffice`（soffice）—— 跨格式转换 · Excel 公式重算
+- `pandoc` —— docx ↔ md ↔ html
+- `poppler-utils`（pdftoppm · pdftotext）—— PDF 内省
+- `tesseract-ocr` —— 扫描件 OCR
 
-Install everything via `install.sh`.
+一条命令装完 · 跑 `install.sh`。
 
-## File Operations Safety
+## 文件操作安全
 
-- **Destructive operations** (overwrite, delete, batch-send email) require explicit confirmation unless the user has enabled auto mode for them
-- **Outputs go to** `./deliverables/` by default, not in-place modifications
-- **Never commit secrets** — SMTP passwords, API keys, DB URLs must come from env vars
-- **PII / sensitive data** — when the user provides personal data, process locally and don't save intermediate copies to memory
+- **破坏性操作**（覆盖、删除、批量发邮件）需要主人明确确认 —— 除非主人开了自动模式
+- **输出默认去** `./deliverables/` —— 不原地修改源文件
+- **永远不提交密钥** —— SMTP 密码 · API key · 数据库 URL 必须走环境变量
+- **PII / 敏感数据** —— 主人给个人数据时 · 本地处理 · 不往记忆系统里存中间副本
 
-## Integration with Other Claude Code Features
+## 和龙虾其它功能的整合
 
-- **Task tracking** — for multi-step orchestrations, create explicit tasks via TaskCreate
-- **Background agents** — long-running pipelines (bulk mail merge, OCR on 1000s of PDFs) should use background agents
-- **Memory** — don't save transcripts / contracts / PII to the auto-memory system; process and discard
-- **Subagents** — for visual QA of decks or documents, dispatch fresh subagents per the `pptx-pro` workflow
+- **任务跟踪** —— 多步编排要用 TaskCreate 明确建任务
+- **后台 Agent** —— 长跑流水线（批量邮件合并 · 几千份 PDF OCR）用后台 agent
+- **记忆** —— 不把转录 / 合同 / PII 存进 auto-memory · 处理完即抛
+- **子 Agent** —— PPT / 文档的视觉 QA 按 `pptx-pro` 的流程 · 每次起新子 agent
 
-## Versioning
+## 版本管理
 
-Each SKILL.md declares its own version in frontmatter. Breaking changes bump major. Adding a new capability bumps minor. Typo fixes / doc improvements bump patch.
+每份 SKILL.md 在 frontmatter 声明自己的版本。破坏性变更升 major · 新能力升 minor · 修错别字 / 改文档升 patch。
 
-Update the skill's frontmatter `version` when you change it, so users can diff against upstream.
+改 skill 时顺手更新 frontmatter 的 `version` · 让用户能跟上游 diff。
 
-## Getting Help
+## 求助
 
-- Read the individual SKILL.md files for deep technical docs
-- Issues / feature requests: file at https://github.com/huangji6693-max/office-skills-pro/issues
-- Pattern not covered? Fork and add — the architecture (11 composable skills) is designed to extend
+- 每个 SKILL.md 都是深度技术文档 · 直接读
+- 问题 / 功能建议：https://github.com/huangji6693-max/office-skills-pro/issues
+- 缺了某个模式？fork 加 —— 11 个可组合 skill 的架构就是为了扩展设计的
